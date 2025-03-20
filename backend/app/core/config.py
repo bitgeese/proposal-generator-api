@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
 
+    # LangChain settings
+    OPENAI_API_KEY: str | None = None
+    ANTHROPIC_API_KEY: str | None = None
+    DEFAULT_LLM_MODEL: str | None = "claude-3-haiku-20240307"
+    DEFAULT_LLM_TEMPERATURE: float = 0.7
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:

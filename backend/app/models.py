@@ -1,6 +1,8 @@
 import uuid
+from datetime import datetime
+from typing import List, Optional
 
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -112,3 +114,34 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+
+# Proposal Generator Models - Using Pydantic BaseModel since these don't need DB persistence
+class ProposalGeneratorInput(BaseModel):
+    job_title: str = Field(min_length=1)
+    job_description: str = Field(min_length=1)
+    skills: List[str] = Field(min_length=1)
+    additional_context: Optional[str] = None
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "job_title": "Python Developer for Web Scraping Project",
+                "job_description": "Looking for an experienced Python developer to build a web scraper...",
+                "skills": ["Python", "BeautifulSoup", "FastAPI"],
+                "additional_context": "I have 5 years of experience with similar projects"
+            }
+        }
+
+
+class ProposalGeneratorOutput(BaseModel):
+    proposal_text: str = Field(min_length=1)
+    generation_time: datetime
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "proposal_text": "Hello! I'm an experienced Python developer with expertise in web scraping...",
+                "generation_time": "2023-03-19T12:34:56.789Z"
+            }
+        }
