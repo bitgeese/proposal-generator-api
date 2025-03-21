@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Upwork Proposal Generator</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: #14a800;
+    }
+    
+    p {
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    
+    .status {
+      padding: 12px;
+      border-radius: 4px;
+      background-color: #f8f9fa;
+      margin-bottom: 16px;
+    }
+    
+    .status.active {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status.inactive {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    button {
+      padding: 8px 16px;
+      background-color: #14a800;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background-color: #108a00;
+    }
+    
+    button:disabled {
+      background-color: #88e472;
+      cursor: not-allowed;
+    }
+    
+    .login-form {
+      margin-top: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .error-message {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    .auth-status {
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .auth-status.logged-in {
+      color: #155724;
+    }
+    
+    .auth-status.logged-out {
+      color: #721c24;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upwork Proposal Generator</h1>
+  
+  <div id="status" class="status">
+    Checking page...
+  </div>
+  
+  <div id="auth-section">
+    <div id="auth-status" class="auth-status logged-out">
+      Not logged in
+    </div>
+    
+    <!-- Login form (shown when not logged in) -->
+    <div id="login-form" class="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Enter your email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+      </div>
+      <button id="login-button">Log In</button>
+      <div id="login-error" class="error-message hidden"></div>
+    </div>
+    
+    <!-- Logged in actions (shown when logged in) -->
+    <div id="logged-in-actions" class="hidden">
+      <button id="logout-button">Log Out</button>
+    </div>
+  </div>
+  
+  <p>
+    This extension helps you generate professional proposals for Upwork jobs.
+    Navigate to a job application page to use it.
+  </p>
+  
+  <p>
+    <small>
+      When on a job application page, look for the "Write Proposal" button above the cover letter textarea.
+    </small>
+  </p>
+  
+  <script src="js/popup.js"></script>
+</body>
+</html> 
