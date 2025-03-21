@@ -1,6 +1,8 @@
 """Service for generating Upwork proposal texts using LangChain."""
 
+import json
 import logging
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -13,8 +15,8 @@ from pydantic import ValidationError
 from app.core.config import settings
 from app.models import ProposalGeneratorInput, ProposalGeneratorOutput
 
-# Set up logging
-logger = logging.getLogger(__name__)
+# Set up logging with structured format
+logger = logging.getLogger("proposal_generator")
 
 # Default prompt template
 DEFAULT_TEMPLATE = """
@@ -66,23 +68,36 @@ class ProposalGenerator:
         self.temperature = temperature
         self.prompt_template = prompt_template or DEFAULT_TEMPLATE
         
+        logger.info(
+            "Initializing ProposalGenerator",
+            extra={
+                "model_name": self.model_name,
+                "temperature": self.temperature,
+                "prompt_template_size": len(self.prompt_template),
+            }
+        )
+        
         # Determine which provider to use based on model name
         if "claude" in self.model_name.lower():
             if not settings.ANTHROPIC_API_KEY:
+                logger.error("Missing ANTHROPIC_API_KEY for Claude model")
                 raise ProposalGenerationError("ANTHROPIC_API_KEY is required for Claude models")
             self.llm = ChatAnthropic(
                 model=self.model_name,
                 temperature=self.temperature,
                 anthropic_api_key=settings.ANTHROPIC_API_KEY,
             )
+            logger.debug("Using Anthropic Claude model")
         else:  # Default to OpenAI
             if not settings.OPENAI_API_KEY:
+                logger.error("Missing OPENAI_API_KEY for OpenAI model")
                 raise ProposalGenerationError("OPENAI_API_KEY is required for OpenAI models")
             self.llm = ChatOpenAI(
                 model=self.model_name,
                 temperature=self.temperature,
                 openai_api_key=settings.OPENAI_API_KEY,
             )
+            logger.debug("Using OpenAI ChatGPT model")
         
         # Set up the LangChain
         self._setup_chain()
@@ -94,6 +109,7 @@ class ProposalGenerator:
             input_variables=["job_title", "job_description", "skills", "additional_context_prompt"],
         )
         self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
+        logger.debug("LangChain setup complete")
     
     async def generate_proposal(self, input_data: ProposalGeneratorInput) -> ProposalGeneratorOutput:
         """
@@ -108,6 +124,23 @@ class ProposalGenerator:
         Raises:
             ProposalGenerationError: If there's an error during generation
         """
+        generation_id = f"gen_{int(time.time())}"
+        
+        # Log the start of proposal generation
+        logger.info(
+            "Starting proposal generation",
+            extra={
+                "generation_id": generation_id,
+                "job_title": input_data.job_title,
+                "job_description_length": len(input_data.job_description),
+                "skills_count": len(input_data.skills),
+                "has_additional_context": input_data.additional_context is not None,
+                "model_used": self.model_name,
+            }
+        )
+        
+        start_time = time.time()
+        
         try:
             # Prepare additional context
             additional_context_prompt = ""
@@ -118,6 +151,14 @@ class ProposalGenerator:
             skills_str = ", ".join(input_data.skills)
             
             # Generate proposal
+            logger.debug(
+                "Invoking AI model",
+                extra={
+                    "generation_id": generation_id,
+                    "model": self.model_name,
+                }
+            )
+            
             result = await self.chain.ainvoke({
                 "job_title": input_data.job_title,
                 "job_description": input_data.job_description,
@@ -126,6 +167,17 @@ class ProposalGenerator:
             })
             
             proposal_text = result.get("text", "").strip()
+            processing_time = time.time() - start_time
+            
+            # Log successful generation
+            logger.info(
+                "Proposal generation successful",
+                extra={
+                    "generation_id": generation_id,
+                    "processing_time_seconds": processing_time,
+                    "proposal_length": len(proposal_text),
+                }
+            )
             
             # Create output model
             return ProposalGeneratorOutput(
@@ -134,7 +186,17 @@ class ProposalGenerator:
             )
             
         except Exception as e:
-            logger.error(f"Error generating proposal: {str(e)}", exc_info=True)
+            processing_time = time.time() - start_time
+            logger.error(
+                f"Error generating proposal: {str(e)}",
+                extra={
+                    "generation_id": generation_id,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": processing_time,
+                },
+                exc_info=True
+            )
             raise ProposalGenerationError(f"Failed to generate proposal: {str(e)}")
 
 
@@ -153,6 +215,7 @@ def get_proposal_generator() -> ProposalGenerator:
     """
     global default_generator
     if default_generator is None:
+        logger.info("Creating new ProposalGenerator instance")
         default_generator = ProposalGenerator()
     return default_generator
 
@@ -167,5 +230,6 @@ async def generate_proposal(input_data: ProposalGeneratorInput) -> ProposalGener
     Returns:
         A ProposalGeneratorOutput with the generated proposal text and timestamp
     """
+    logger.info("Generating proposal with default generator")
     generator = get_proposal_generator()
     return await generator.generate_proposal(input_data) 

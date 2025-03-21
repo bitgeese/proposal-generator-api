@@ -1,4 +1,6 @@
 from collections.abc import Generator
+import os
+import warnings
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,6 +12,20 @@ from app.main import app
 from app.models import Item, User
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
+
+
+# Filter warnings directly before test collection
+warnings.filterwarnings(
+    "ignore", 
+    message=".*POSTGRES_PASSWORD is.*", 
+    category=UserWarning
+)
+
+warnings.filterwarnings(
+    "ignore",
+    message=".*class-based.*config.*is deprecated.*",
+    category=DeprecationWarning
+)
 
 
 @pytest.fixture(scope="session", autouse=True)

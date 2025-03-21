@@ -123,8 +123,8 @@ class ProposalGeneratorInput(BaseModel):
     skills: List[str] = Field(min_length=1)
     additional_context: Optional[str] = None
     
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "job_title": "Python Developer for Web Scraping Project",
                 "job_description": "Looking for an experienced Python developer to build a web scraper...",
@@ -132,16 +132,18 @@ class ProposalGeneratorInput(BaseModel):
                 "additional_context": "I have 5 years of experience with similar projects"
             }
         }
+    }
 
 
 class ProposalGeneratorOutput(BaseModel):
     proposal_text: str = Field(min_length=1)
     generation_time: datetime
     
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "proposal_text": "Hello! I'm an experienced Python developer with expertise in web scraping...",
                 "generation_time": "2023-03-19T12:34:56.789Z"
             }
         }
+    }
